@@ -7,7 +7,7 @@ services:
       - ISUCON_DB_USER=isucon
       - ISUCON_DB_PASSWORD=isucon
       - ISUCON_DB_NAME=isuports
-      - SERVER_NUMBER
+      - SERVER_NUMBER=2
     network_mode: host
     volumes:
       - /home/isucon/webapp/tenant_db:/home/isucon/webapp/tenant_db
