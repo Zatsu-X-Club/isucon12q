@@ -658,7 +658,7 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 		pidList := []string{}
 		for _, p := range scoredPlayerIDs {
 			if p.CompetitionID == comp.ID {
-				pidList = append(pidList, p)
+				pidList = append(pidList, p.PlayerID)
 			}
 		}
 		report, err := billingReportByCompetitionSub(ctx, tenantDB, tenantID, comp, vh, pidList)
