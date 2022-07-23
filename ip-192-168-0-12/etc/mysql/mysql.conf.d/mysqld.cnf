@@ -80,20 +80,6 @@ thread_cache_size=100
 # クエリキャッシュのタイプ(0:off, 1:ON SELECT SQL_NO_CACHE以外, 2:DEMAND SELECT SQL_CACHEのみ)
 query_cache_type=1
 
-# テーブルを作り直さないと効果が薄い
-innodb_file_per_table=ON
-
-# InnoDBのデータとインデックスをキャッシュするバッファのサイズ(推奨は物理メモリの8割)
-innodb_buffer_pool_size=256M
-
-# InnoDBの更新ログを記録するディスク上のファイルサイズ(innodb_buffer_pool_sizeの4分の1程度)
-innodb_log_file_size=64M
-
-# コミットされていないトランザクションのためのバッファのサイズ
-innodb_log_buffer_size=64M
-
-#OSによるディスクキャッシュと2重でメモリを確保しないようにする
-innodb_flush_method=0_DIRECT
 
 # インデックス未使用でのJOIN時に使用するバッファ
 join_buffer_size=256K
