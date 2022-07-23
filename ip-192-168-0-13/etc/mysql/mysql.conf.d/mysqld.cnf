@@ -60,6 +60,16 @@ myisam-recover-options  = BACKUP
 # Error log - should be very few entries.
 #
 log_error = /var/log/mysql/error.log
+
+# スロークエリの出力設定(最後切る)
+slow_query_log=ON
+
+# スロークエリと判定する秒数(全て表示)
+long_query_time=0
+
+# スロークエリログの場所
+slow_query_log_file = /var/log/mysql/mysql-slow.log
+
 #
 # Here you can see queries with especially long duration
 # slow_query_log		= 1
