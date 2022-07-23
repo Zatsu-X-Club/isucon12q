@@ -106,19 +106,18 @@ var pCache = &prepareCache{
 }
 
 func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
-	pCache.mx.RLock()
-	stmt, ok := pCache.store[query]
-	pCache.mx.RUnlock()
-	if !ok {
-		var err error
-		stmt, err = tenantDB.Preparex(query)
-		if err != nil {
-			return nil, fmt.Errorf("prepare: %w", err)
-		}
-		pCache.mx.Lock()
-		pCache.store[query] = stmt
-		pCache.mx.Unlock()
+	//stmt, ok := pCache.store[query]
+	//pCache.mx.RUnlock()
+	//if !ok {
+	//	var err error
+	stmt, err := tenantDB.Preparex(query)
+	if err != nil {
+		return nil, fmt.Errorf("prepare: %w", err)
 	}
+	//	pCache.mx.Lock()
+	//	pCache.store[query] = stmt
+	//	pCache.mx.Unlock()
+	//}
 
 	rows, err := stmt.QueryxContext(ctx, args...)
 	if err != nil {
