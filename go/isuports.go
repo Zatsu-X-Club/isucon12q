@@ -134,7 +134,7 @@ func connectToTenantDB(id int64) (*sqlx.DB, error) {
 	}
 
 	p := tenantDBPath(id)
-	db, err := sqlx.Open(sqliteDriverName, fmt.Sprintf("file:%s?mode=rw", p))
+	db, err := sqlx.Open(sqliteDriverName, fmt.Sprintf("file:%s?mode=rw&_journal_mode=WAL&cache=shared&_synchronous=NORMAL", p))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open tenant DB: %w", err)
 	}
