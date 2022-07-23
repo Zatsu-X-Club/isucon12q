@@ -23,7 +23,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/gofrs/flock"
 	"github.com/jmoiron/sqlx"
-	"github.com/kaz/pprotein/integration/standalone"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
