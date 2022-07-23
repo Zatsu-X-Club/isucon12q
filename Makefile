@@ -1,5 +1,5 @@
 HOSTNAME:=$(shell hostname)
-BRANCH:=server-num
+BRANCH:=master
 
 all: build
 
