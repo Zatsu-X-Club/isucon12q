@@ -192,6 +192,15 @@ func Run() {
 		e.Logger.Fatalf("failed to connect db: %v", err)
 		return
 	}
+	for {
+		// 再起動対策
+		err := adminDB.Ping()
+		if err == nil {
+			break
+		}
+		e.Logger.Info(err)
+		time.Sleep(time.Second * 1)
+	}
 	adminDB.SetMaxOpenConns(10)
 	defer adminDB.Close()
 
