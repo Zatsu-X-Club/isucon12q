@@ -642,7 +642,7 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 	if err := tenantDB.SelectContext(
 		ctx,
 		&scoredPlayerIDs,
-		"SELECT DISTINCT(player_id) as pid FROM player_score WHERE tenant_id = ?",
+		"SELECT DISTINCT(player_id) as pid, competition_id FROM player_score WHERE tenant_id = ?",
 		tenantID,
 	); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("error Select count player_score: tenantID=%d, %w", tenantID, err)
