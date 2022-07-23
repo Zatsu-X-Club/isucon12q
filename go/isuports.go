@@ -414,6 +414,7 @@ type CompetitionRow struct {
 	UpdatedAt  int64         `db:"updated_at"`
 }
 
+// retrieveCompetitionのcache
 var competitionCache = NewCache()
 
 // 大会を取得する
@@ -1136,6 +1137,8 @@ func competitionScoreHandler(c echo.Context) error {
 	); err != nil {
 		return fmt.Errorf("error Delete player_score: tenantID=%d, competitionID=%s, %w", v.tenantID, competitionID, err)
 	}
+	// DELETEしたのでcacheの削除
+	playerScoreCache.Set(competitionID, nil)
 	for _, ps := range playerScoreRows {
 		// ここもbulk-insertする
 		if _, err := tenantDB.NamedExecContext(
@@ -1220,6 +1223,8 @@ type PlayerHandlerResult struct {
 // 参加者向けAPI
 // GET /api/player/player/:player_id
 // 参加者の詳細情報を取得する
+var playerScoreCache = NewCache()
+
 func playerHandler(c echo.Context) error {
 	ctx := context.Background()
 
@@ -1271,6 +1276,16 @@ func playerHandler(c echo.Context) error {
 	pss := make([]PlayerScoreRow, 0, len(cs))
 	for _, c := range cs {
 		ps := PlayerScoreRow{}
+		value := playerScoreCache.Get(c.ID)
+		if value != nil {
+			v, ok := value.(PlayerScoreRow)
+			if !ok {
+				log.Print("[tosa_debug] cast miss")
+				return fmt.Errorf("[tosa_debug_error] cast miss")
+			}
+			pss = append(pss, v)
+			continue
+		}
 		// ここもまとめてSELECTすべき
 		if err := tenantDB.GetContext(
 			ctx,
@@ -1287,6 +1302,8 @@ func playerHandler(c echo.Context) error {
 			}
 			return fmt.Errorf("error Select player_score: tenantID=%d, competitionID=%s, playerID=%s, %w", v.tenantID, c.ID, p.ID, err)
 		}
+		// cacheのset
+		playerScoreCache.Set(c.ID, ps)
 		pss = append(pss, ps)
 	}
 
