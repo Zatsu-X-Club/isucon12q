@@ -6,9 +6,7 @@ sudo cp -f etc/nginx/nginx.conf /etc/nginx/nginx.conf
 sudo cp -f etc/nginx/sites-available/isuports.conf /etc/nginx/sites-available/isuports.conf
 sudo nginx -t
 
-cd /home/isucon/webapp/go
-
-docker compose -f docker-compose-go.yml up
+docker compose -f ../docker-compose-go.yml up --build
 
 sudo systemctl restart isuports.go
 sudo systemctl restart nginx
