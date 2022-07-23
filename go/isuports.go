@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -80,13 +81,37 @@ func tenantDBPath(id int64) string {
 	return filepath.Join(tenantDBDir, fmt.Sprintf("%d.db", id))
 }
 
+var connectionStorage sync.Map
+
+func get(id int64) (*sqlx.DB, bool) {
+	val, ok := connectionStorage.Load(id)
+	if !ok {
+		return nil, false
+	}
+
+	return val.(*sqlx.DB), true
+}
+
+func set(id int64, db *sqlx.DB) {
+	connectionStorage.Store(id, db)
+}
+
 // テナントDBに接続する
 func connectToTenantDB(id int64) (*sqlx.DB, error) {
+	cached, ok := get(id)
+	if ok {
+		return cached, nil
+	}
+
 	p := tenantDBPath(id)
 	db, err := sqlx.Open(sqliteDriverName, fmt.Sprintf("file:%s?mode=rw", p))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open tenant DB: %w", err)
 	}
+	go func() {
+		set(id, db)
+	}()
+
 	return db, nil
 }
 
