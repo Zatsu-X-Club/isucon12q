@@ -127,6 +127,8 @@ func Run() {
 	a := int32(sni) + 100
 	i = &a
 
+	fmt.Printf("servernum: %v", i)
+
 	go standalone.Integrate(":8888")
 
 	e := echo.New()
