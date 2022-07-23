@@ -6,8 +6,8 @@ sudo cp -f etc/nginx/nginx.conf /etc/nginx/nginx.conf
 sudo cp -f etc/nginx/sites-available/isuports.conf /etc/nginx/sites-available/isuports.conf
 sudo nginx -t
 
-sudo systemctl restart nginx
 sudo systemctl restart mysql
+sudo systemctl restart nginx
 
 
 # slow query logを有効化する
@@ -25,4 +25,4 @@ sudo chmod 777 /var/log/mysql /var/log/mysql/*
 
 docker compose -f ../docker-compose-go.yml up --build --force-recreate
 
-sudo systemctl restart isuports.go
+sudo systemctl restart isuports
