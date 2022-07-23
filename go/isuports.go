@@ -588,14 +588,14 @@ type VisitHistorySummaryRow struct {
 // 新しく作った方が良い
 func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID int64, competitonsRow []CompetitionRow) ([]BillingReport, error) {
 	// competitionの値を取得する
-	var compList []CompetitionRow
-	if err := tenantDB.GetContext(ctx, &compList, "SELECT * FROM competition"); err != nil {
-		return nil, fmt.Errorf("error Select tenant competition: %w", err)
-	}
+	// var compList []CompetitionRow
+	// if err := tenantDB.GetContext(ctx, &compList, "SELECT * FROM competition"); err != nil {
+	// 	return nil, fmt.Errorf("error Select tenant competition: %w", err)
+	// }
 
 	var billingReports []BillingReport
-	for i := 0; i < len(compList); i++ {
-		comp := compList[i]
+	for i := 0; i < len(competitonsRow); i++ {
+		comp := competitonsRow[i]
 		competitonID := comp.ID
 		// ランキングにアクセスした参加者のIDを取得する
 		vhs := []VisitHistorySummaryRow{}
