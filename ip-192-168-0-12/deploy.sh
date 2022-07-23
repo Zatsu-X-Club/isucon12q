@@ -6,9 +6,6 @@ sudo cp -f etc/nginx/nginx.conf /etc/nginx/nginx.conf
 sudo cp -f etc/nginx/sites-available/isuports.conf /etc/nginx/sites-available/isuports.conf
 sudo nginx -t
 
-docker compose -f ../docker-compose-go.yml up --build --force-recreate
-
-sudo systemctl restart isuports.go
 sudo systemctl restart nginx
 sudo systemctl restart mysql
 
@@ -25,3 +22,7 @@ sudo systemctl restart mysql
 # log permission
 sudo chmod 777 /var/log/nginx /var/log/nginx/*
 sudo chmod 777 /var/log/mysql /var/log/mysql/*
+
+docker compose -f ../docker-compose-go.yml up --build --force-recreate
+
+sudo systemctl restart isuports.go
