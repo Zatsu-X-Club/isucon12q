@@ -105,7 +105,7 @@ var pCache = &prepareCache{
 	store: map[string]*sqlx.Stmt{},
 }
 
-func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, dist interface{}, args ...interface{}) ([]interface{}, error) {
+func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
 	pCache.mx.RLock()
 	stmt, ok := pCache.store[query]
 	pCache.mx.RUnlock()
@@ -124,9 +124,8 @@ func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, d
 	if err != nil {
 		return nil, fmt.Errorf("bind: %w", err)
 	}
-	defer rows.Close()
 
-	return rows.SliceScan()
+	return rows, nil
 }
 
 // テナントDBに接続する
@@ -1661,7 +1660,7 @@ func competitionRankingHandler(c echo.Context) error {
 	}
 	defer fl.Close()
 	// テナント・コンペでrow_numソートしてとってくる
-	data, err := cachedSelectContext(
+	rows, err := cachedSelectContext(
 		tenantDB,
 		ctx,
 		"SELECT * FROM player_score WHERE tenant_id = ? AND competition_id = ? ORDER BY row_num DESC",
@@ -1671,25 +1670,16 @@ func competitionRankingHandler(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error Select player_score: tenantID=%d, competitionID=%s, %w", tenant.ID, competitionID, err)
 	}
-	pss := make([]PlayerScoreRow, len(data))
-	for i, d := range data {
-		typed, ok := d.(PlayerScoreRow)
-		if !ok {
-			return fmt.Errorf("unexpected data: %v", d)
-		}
-		pss[i] = typed
-	}
 
-	//for rows.Next() {
-	//	ps := PlayerScoreRow{}
-	//	sqlx.Rows{}
-	//	err := rows.Scan(ps.ID)
-	//	if err != nil {
-	//		return fmt.Errorf("scan :%w", err)
-	//	}
-	//
-	//	pss = append(pss, ps)
-	//}
+	pss := []PlayerScoreRow{}
+	for rows.Next() {
+		ps := PlayerScoreRow{}
+		err := rows.Scan(&ps)
+		if err != nil {
+			return fmt.Errorf("scan :%w", err)
+		}
+		pss = append(pss, ps)
+	}
 
 	ranks := make([]CompetitionRank, 0, len(pss))
 	scoredPlayerSet := make(map[string]struct{}, len(pss))
