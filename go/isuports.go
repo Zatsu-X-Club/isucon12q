@@ -615,6 +615,11 @@ type VisitHistorySummaryRow2 struct {
 	CompetitionID string `db:"competition_id"`
 }
 
+type scoredPlayerIDs2 struct {
+	PlayerID      string `db:pid`
+	CompetitionID string `db:"competition_id"`
+}
+
 func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID int64, competiton []CompetitionRow) ([]BillingReport, error) {
 	var reports []BillingReport
 	vhs := []VisitHistorySummaryRow2{}
@@ -627,6 +632,17 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 		return nil, fmt.Errorf("error Select visit_history: tenantID=%d, %w", tenantID, err)
 	}
 
+	// スコアを登録した参加者のIDを取得する
+	scoredPlayerIDs := []scoredPlayerIDs2{}
+	if err := tenantDB.SelectContext(
+		ctx,
+		&scoredPlayerIDs,
+		"SELECT DISTINCT(player_id) as pid FROM player_score WHERE tenant_id = ?",
+		tenantID,
+	); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("error Select count player_score: tenantID=%d, %w", tenantID, err)
+	}
+
 	for _, comp := range competiton {
 		vh := []VisitHistorySummaryRow2{}
 		for _, v := range vhs {
@@ -634,7 +650,13 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 				vh = append(vh, v)
 			}
 		}
-		report, err := billingReportByCompetitionSub(ctx, tenantDB, tenantID, comp, vh)
+		pidList := []string{}
+		for _, p := range scoredPlayerIDs {
+			if p.CompetitionID == comp.ID {
+				pidList = append(pidList, p)
+			}
+		}
+		report, err := billingReportByCompetitionSub(ctx, tenantDB, tenantID, comp, vh, pidList)
 		if err != nil {
 			return []BillingReport{}, err
 		}
@@ -644,7 +666,13 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 }
 
 // new function
-func billingReportByCompetitionSub(ctx context.Context, tenantDB dbOrTx, tenantID int64, competiton CompetitionRow, vhs []VisitHistorySummaryRow2) (*BillingReport, error) {
+func billingReportByCompetitionSub(
+	ctx context.Context, 
+	tenantDB dbOrTx, 
+	tenantID int64, 
+	competiton CompetitionRow, 
+	vhs []VisitHistorySummaryRow2, 
+	scoredPlayerIds: []string) (*BillingReport, error) {
 	// competitionの値を取得する
 	comp := competiton
 	if !comp.FinishedAt.Valid {
@@ -678,15 +706,7 @@ func billingReportByCompetitionSub(ctx context.Context, tenantDB dbOrTx, tenantI
 	defer fl.Close()
 
 	// スコアを登録した参加者のIDを取得する
-	scoredPlayerIDs := []string{}
-	if err := tenantDB.SelectContext(
-		ctx,
-		&scoredPlayerIDs,
-		"SELECT DISTINCT(player_id) FROM player_score WHERE tenant_id = ? AND competition_id = ?",
-		tenantID, comp.ID,
-	); err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("error Select count player_score: tenantID=%d, competitionID=%s, %w", tenantID, comp.ID, err)
-	}
+	scoredPlayerIDs := scoredPlayerIds
 	for _, pid := range scoredPlayerIDs {
 		// スコアが登録されている参加者
 		billingMap[pid] = "player"
