@@ -32,6 +32,7 @@ import (
 
 const (
 	tenantDBSchemaFilePath = "../sql/tenant/10_schema.sql"
+	tenantDBIndexFilePath  = "../sql/tenant/11_index.sql"
 	initializeScript       = "../sql/init.sh"
 	cookieName             = "isuports_session"
 
@@ -95,6 +96,21 @@ func createTenantDB(id int64) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("sqlite3 %s < %s", p, tenantDBSchemaFilePath))
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to exec sqlite3 %s < %s, out=%s: %w", p, tenantDBSchemaFilePath, string(out), err)
+	}
+
+	if err := createIndexTenantDB(id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createIndexTenantDB(id int64) error {
+	p := tenantDBPath(id)
+
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("sqlite3 %s < %s", p, tenantDBIndexFilePath))
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to exec sqlite3 %s < %s, out=%s: %w", p, tenantDBIndexFilePath, string(out), err)
 	}
 	return nil
 }
@@ -1632,6 +1648,13 @@ func initializeHandler(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error exec.Command: %s %e", string(out), err)
 	}
+
+	for i := 1; i <= 100; i++ {
+		if err := createIndexTenantDB(int64(i)); err != nil {
+			return fmt.Errorf("error create index: %e", err)
+		}
+	}
+
 	res := InitializeHandlerResult{
 		Lang: "go",
 	}

@@ -8,8 +8,7 @@ CREATE TABLE competition (
   title TEXT NOT NULL,
   finished_at BIGINT NULL,
   created_at BIGINT NOT NULL,
-  updated_at BIGINT NOT NULL,
-  INDEX tenant_created(`tenant_id`, `created_at`)
+  updated_at BIGINT NOT NULL
 );
 
 CREATE TABLE player (
@@ -29,6 +28,5 @@ CREATE TABLE player_score (
   score BIGINT NOT NULL,
   row_num BIGINT NOT NULL,
   created_at BIGINT NOT NULL,
-  updated_at BIGINT NOT NULL,
-  INDEX tenant_compe(`tenant_id`,`player_id`)
+  updated_at BIGINT NOT NULL
 );
