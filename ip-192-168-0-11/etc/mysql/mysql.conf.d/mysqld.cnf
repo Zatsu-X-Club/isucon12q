@@ -28,7 +28,7 @@ user		= mysql
 #
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
-bind-address		= 127.0.0.1
+# bind-address		= 127.0.0.1
 mysqlx-bind-address	= 127.0.0.1
 #
 # * Fine Tuning
@@ -62,10 +62,10 @@ myisam-recover-options  = BACKUP
 log_error = /var/log/mysql/error.log
 
 # スロークエリの出力設定(最後切る)
-slow_query_log=ON
+slow_query_log=OFF
 
 # スロークエリと判定する秒数(全て表示)
-long_query_time=0
+long_query_time=10
 
 # スロークエリログの場所
 slow_query_log_file = /var/log/mysql/mysql-slow.log
