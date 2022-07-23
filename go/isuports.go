@@ -1674,7 +1674,7 @@ func competitionRankingHandler(c echo.Context) error {
 	pss := []PlayerScoreRow{}
 	for rows.Next() {
 		ps := PlayerScoreRow{}
-		err := rows.Scan(&ps)
+		err := rows.StructScan(&ps)
 		if err != nil {
 			return fmt.Errorf("scan :%w", err)
 		}
