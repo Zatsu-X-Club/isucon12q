@@ -677,6 +677,11 @@ type TenantsBillingHandlerResult struct {
 // テナントごとの課金レポートを最大10件、テナントのid降順で取得する
 // GET /api/admin/tenants/billing
 // URL引数beforeを指定した場合、指定した値よりもidが小さいテナントの課金レポートを取得する
+// retrieveCompetitionのcache
+
+// tenantIdからcompetitionの値を取得する
+var competitionByTenantIdCache = NewCache()
+
 func tenantsBillingHandler(c echo.Context) error {
 	if host := c.Request().Host; host != getEnv("ISUCON_ADMIN_HOSTNAME", "admin.t.isucon.dev") {
 		return echo.NewHTTPError(
@@ -715,6 +720,7 @@ func tenantsBillingHandler(c echo.Context) error {
 		return fmt.Errorf("error Select tenant: %w", err)
 	}
 	tenantBillings := make([]TenantWithBilling, 0, len(ts))
+	// ここを治す
 	for _, t := range ts {
 		if beforeID != 0 && beforeID <= t.ID {
 			continue
@@ -731,15 +737,28 @@ func tenantsBillingHandler(c echo.Context) error {
 			}
 			defer tenantDB.Close()
 			cs := []CompetitionRow{}
+
 			// N + N + 1 外でまとめる
-			if err := tenantDB.SelectContext(
-				ctx,
-				&cs,
-				"SELECT * FROM competition WHERE tenant_id=?",
-				t.ID,
-			); err != nil {
-				return fmt.Errorf("failed to Select competition: %w", err)
+			// とりあえずここcacheする
+			var value = competitionCache.Get(string(t.ID))
+			if value != nil {
+				ok := true
+				cs, ok = value.([]CompetitionRow)
+				if !ok {
+					return fmt.Errorf("tosa cast error: %w", err)
+				}
+			} else {
+				if err := tenantDB.SelectContext(
+					ctx,
+					&cs,
+					"SELECT * FROM competition WHERE tenant_id=?",
+					t.ID,
+				); err != nil {
+					return fmt.Errorf("failed to Select competition: %w", err)
+				}
+				competitionByTenantIdCache.Set(string(t.ID), cs)
 			}
+
 			for _, comp := range cs {
 				report, err := billingReportByCompetition(ctx, tenantDB, t.ID, comp.ID)
 				if err != nil {
@@ -984,6 +1003,8 @@ func competitionsAddHandler(c echo.Context) error {
 			id, v.tenantID, title, now, now, err,
 		)
 	}
+	competitionByTenantIdCache.Set(string(v.tenantID), nil)
+	competitionCache.Set(id, nil)
 
 	res := CompetitionsAddHandlerResult{
 		Competition: CompetitionDetail{
@@ -1038,6 +1059,7 @@ func competitionFinishHandler(c echo.Context) error {
 		)
 	}
 	// cacheを取り消す
+	competitionByTenantIdCache.Set(string(v.tenantID), nil)
 	competitionCache.Set(id, nil)
 
 	return c.JSON(http.StatusOK, SuccessResult{Status: true})
