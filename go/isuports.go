@@ -1591,6 +1591,8 @@ type CompetitionRankingHandlerResult struct {
 // 参加者向けAPI
 // GET /api/player/competition/:competition_id/ranking
 // 大会ごとのランキングを取得する
+var rankCache = NewCache()
+
 func competitionRankingHandler(c echo.Context) error {
 	ctx := context.Background()
 	v, err := parseViewer(c)
@@ -1642,13 +1644,33 @@ func competitionRankingHandler(c echo.Context) error {
 		)
 	}
 
-	// これより後のrank ページングってことか？
 	var rankAfter int64
 	rankAfterStr := c.QueryParam("rank_after")
 	if rankAfterStr != "" {
 		if rankAfter, err = strconv.ParseInt(rankAfterStr, 10, 64); err != nil {
 			return fmt.Errorf("error strconv.ParseUint: rankAfterStr=%s, %w", rankAfterStr, err)
 		}
+	}
+	// if competition.FinishedAt.Valid {
+	// 	rankCache.Set(competition.ID, CompetitionDetail{
+	// 		ID:         competition.ID,
+	// 		Title:      competition.Title,
+	// 		IsFinished: competition.FinishedAt.Valid,
+	// 	})
+	// }
+
+	value := rankCache.Get(competitionID)
+	if value != nil {
+		v, ok := value.(CompetitionRankingHandlerResult)
+		if !ok {
+			log.Print("[tosa_debug] cast miss")
+			return fmt.Errorf("[tosa_debug_error] cast miss")
+		}
+		res := SuccessResult{
+			Status: true,
+			Data:   v,
+		}
+		return c.JSON(http.StatusOK, res)
 	}
 
 	// player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
@@ -1722,6 +1744,16 @@ func competitionRankingHandler(c echo.Context) error {
 		}
 	}
 
+	if competition.FinishedAt.Valid {
+		rankCache.Set(competition.ID, CompetitionRankingHandlerResult{
+			Competition: CompetitionDetail{
+				ID:         competition.ID,
+				Title:      competition.Title,
+				IsFinished: competition.FinishedAt.Valid,
+			},
+			Ranks: pagedRanks,
+		})
+	}
 	res := SuccessResult{
 		Status: true,
 		Data: CompetitionRankingHandlerResult{
