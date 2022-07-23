@@ -23,6 +23,6 @@ sudo systemctl restart nginx
 sudo chmod 777 /var/log/nginx /var/log/nginx/*
 sudo chmod 777 /var/log/mysql /var/log/mysql/*
 
-docker compose -f ../docker-compose-go.yml -e SERVER_NUMBER=2 up --build --force-recreate -d
+docker compose -f ../docker-compose-go.yml --env-file envtxt up --build --force-recreate -d
 
 sudo systemctl restart isuports
