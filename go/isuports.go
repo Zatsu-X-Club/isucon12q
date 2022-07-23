@@ -118,7 +118,7 @@ func SetCacheControlPrivate(next echo.HandlerFunc) echo.HandlerFunc {
 // Run は cmd/isuports/main.go から呼ばれるエントリーポイントです
 func Run() {
 	// server number
-	sn := getEnv("SERVER_NUMBER", "1")
+	sn := getEnv("SERVER_NUMBER", "5")
 	sni, err := strconv.ParseInt(sn, 10, 32)
 	if err != nil {
 		panic(err)
