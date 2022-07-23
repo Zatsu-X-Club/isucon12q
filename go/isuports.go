@@ -111,12 +111,13 @@ func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, a
 	pCache.mx.RUnlock()
 	if !ok {
 		var err error
-		stmt, err := tenantDB.Preparex(query)
+		stmt2, err := tenantDB.Preparex(query)
 		if err != nil {
 			return nil, fmt.Errorf("prepare: %w", err)
 		}
 		pCache.mx.Lock()
-		pCache.store[query] = stmt
+		pCache.store[query] = stmt2
+		stmt = stmt2
 		pCache.mx.Unlock()
 	}
 
