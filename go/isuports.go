@@ -202,7 +202,7 @@ func Run() {
 
 	fmt.Printf("servernum: %v", a)
 
-	go standalone.Integrate(":8888")
+	// go standalone.Integrate(":8888")
 
 	e := echo.New()
 	e.Debug = true
