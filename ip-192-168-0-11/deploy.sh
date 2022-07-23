@@ -7,7 +7,7 @@ sudo cp -f etc/nginx/sites-available/isuports.conf /etc/nginx/sites-available/is
 sudo nginx -t
 
 cd /home/isucon/webapp/go
-make build
+make isuports
 
 sudo systemctl restart isuports.go
 sudo systemctl restart nginx
