@@ -105,7 +105,7 @@ var pCache = &prepareCache{
 	store: map[string]*sqlx.Stmt{},
 }
 
-func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, dist interface{}, args ...interface{}) ([]interface{}, error) {
+func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, args ...interface{}) ([]interface{}, error) {
 	pCache.mx.RLock()
 	stmt, ok := pCache.store[query]
 	pCache.mx.RUnlock()
