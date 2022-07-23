@@ -70,6 +70,36 @@ long_query_time=0
 # スロークエリログの場所
 slow_query_log_file = /var/log/mysql/mysql-slow.log
 
+
+# スレッドキャッシュ保持最大数
+thread_cache_size=100
+
+# クエリキャッシュで使用するメモリサイズ
+#query_cache_size=512M
+
+
+# インデックス未使用でのJOIN時に使用するバッファ
+join_buffer_size=256K
+
+# クライアントからサーバーに送信できるパケットの最大長
+max_allowed_packet=20M
+
+# フルスキャンのレコードバッファ
+read_buffer_size=100M
+
+# キーを使用したソートで読み込まれた行がキャッシュされるバッファ
+read_rnd_buffer_size=100M
+
+# ソート時に使用されるバッファ
+sort_buffer_size=100M
+
+# MEMORYテーブルの最大サイズ。このサイズを超えたMEMORYテーブルはディスク上に作成
+max_heap_table_size=100M
+
+# スレッド毎に作成される一時的なテーブルの最大サイズ。スレッドバッファ
+tmp_table_size=20M
+
+
 #
 # Here you can see queries with especially long duration
 # slow_query_log		= 1
