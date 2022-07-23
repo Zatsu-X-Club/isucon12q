@@ -1183,19 +1183,15 @@ func competitionScoreHandler(c echo.Context) error {
 	}
 	// DELETEしたのでcacheの削除
 	playerScoreCache.Set(competitionID, nil)
-	for _, ps := range playerScoreRows {
-		// ここもbulk-insertする
-		if _, err := tenantDB.NamedExecContext(
-			ctx,
-			"INSERT INTO player_score (id, tenant_id, player_id, competition_id, score, row_num, created_at, updated_at) VALUES (:id, :tenant_id, :player_id, :competition_id, :score, :row_num, :created_at, :updated_at)",
-			ps,
-		); err != nil {
-			return fmt.Errorf(
-				"error Insert player_score: id=%s, tenant_id=%d, playerID=%s, competitionID=%s, score=%d, rowNum=%d, createdAt=%d, updatedAt=%d, %w",
-				ps.ID, ps.TenantID, ps.PlayerID, ps.CompetitionID, ps.Score, ps.RowNum, ps.CreatedAt, ps.UpdatedAt, err,
-			)
-
-		}
+	// ここもbulk-insertする
+	if _, err := tenantDB.NamedExecContext(
+		ctx,
+		"INSERT INTO player_score (id, tenant_id, player_id, competition_id, score, row_num, created_at, updated_at) VALUES (:id, :tenant_id, :player_id, :competition_id, :score, :row_num, :created_at, :updated_at)",
+		playerScoreRows,
+	); err != nil {
+		return fmt.Errorf(
+			"error bulk Insert player_score: %w", err,
+		)
 	}
 
 	return c.JSON(http.StatusOK, SuccessResult{
@@ -1430,6 +1426,7 @@ func competitionRankingHandler(c echo.Context) error {
 		return fmt.Errorf("error Select tenant: id=%d, %w", v.tenantID, err)
 	}
 
+	// 閲覧履歴に追加
 	if _, err := adminDB.ExecContext(
 		ctx,
 		"INSERT INTO visit_history (player_id, tenant_id, competition_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
@@ -1441,6 +1438,7 @@ func competitionRankingHandler(c echo.Context) error {
 		)
 	}
 
+	// これより後のrank ページングってことか？
 	var rankAfter int64
 	rankAfterStr := c.QueryParam("rank_after")
 	if rankAfterStr != "" {
@@ -1456,6 +1454,7 @@ func competitionRankingHandler(c echo.Context) error {
 	}
 	defer fl.Close()
 	pss := []PlayerScoreRow{}
+	// テナント・コンペでrow_numソートしてとってくる
 	if err := tenantDB.SelectContext(
 		ctx,
 		&pss,
