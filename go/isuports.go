@@ -101,7 +101,9 @@ type prepareCache struct {
 	mx    sync.RWMutex
 }
 
-var pCache = &prepareCache{}
+var pCache = &prepareCache{
+	store: map[string]*sqlx.Stmt{},
+}
 
 func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, dist interface{}, args ...interface{}) ([]interface{}, error) {
 	pCache.mx.RLock()
