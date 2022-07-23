@@ -202,11 +202,11 @@ func Run() {
 
 	fmt.Printf("servernum: %v", a)
 
-	go standalone.Integrate(":8888")
+	// go standalone.Integrate(":8888")
 
 	e := echo.New()
-	e.Debug = true
-	e.Logger.SetLevel(log.DEBUG)
+	// e.Debug = true
+	// e.Logger.SetLevel(log.DEBUG)
 
 	var (
 		sqlLogger io.Closer
