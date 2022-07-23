@@ -7,7 +7,6 @@ sudo cp -f etc/nginx/sites-available/isuports.conf /etc/nginx/sites-available/is
 sudo nginx -t
 
 cd /home/isucon/webapp/go
-make isuports
 
 docker-compose -f docker-compose-go.yml up
 
