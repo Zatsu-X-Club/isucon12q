@@ -608,6 +608,7 @@ type VisitHistorySummaryRow struct {
 	PlayerID     string `db:"player_id"`
 	MinCreatedAt int64  `db:"min_created_at"`
 }
+
 type VisitHistorySummaryRow2 struct {
 	PlayerID      string `db:"player_id"`
 	MinCreatedAt  int64  `db:"min_created_at"`
@@ -620,7 +621,7 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 	if err := adminDB.SelectContext(
 		ctx,
 		&vhs,
-		"SELECT player_id, MIN(created_at), competition_id AS min_created_at FROM visit_history WHERE tenant_id = ? GROUP BY player_id, competition_id",
+		"SELECT player_id, MIN(created_at), competition_id AS min_created_at FROM visit_history WHERE tenant_id = ? GROUP BY competition_id, player_id",
 		tenantID,
 	); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("error Select visit_history: tenantID=%d, %w", tenantID, err)
