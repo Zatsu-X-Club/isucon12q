@@ -16,6 +16,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -115,30 +116,12 @@ func createIndexTenantDB(id int64) error {
 	return nil
 }
 
+var i *int32
+
 // システム全体で一意なIDを生成する
 func dispenseID(ctx context.Context) (string, error) {
-	var id int64
-	var lastErr error
-	for i := 0; i < 100; i++ {
-		var ret sql.Result
-		ret, err := adminDB.ExecContext(ctx, "REPLACE INTO id_generator (stub) VALUES (?);", "a")
-		if err != nil {
-			if merr, ok := err.(*mysql.MySQLError); ok && merr.Number == 1213 { // deadlock
-				lastErr = fmt.Errorf("error REPLACE INTO id_generator: %w", err)
-				continue
-			}
-			return "", fmt.Errorf("error REPLACE INTO id_generator: %w", err)
-		}
-		id, err = ret.LastInsertId()
-		if err != nil {
-			return "", fmt.Errorf("error ret.LastInsertId: %w", err)
-		}
-		break
-	}
-	if id != 0 {
-		return fmt.Sprintf("%x", id), nil
-	}
-	return "", lastErr
+	n := atomic.AddInt32(i, 3)
+	return strconv.Itoa(int(n)), nil
 }
 
 // 全APIにCache-Control: privateを設定する
@@ -151,6 +134,18 @@ func SetCacheControlPrivate(next echo.HandlerFunc) echo.HandlerFunc {
 
 // Run は cmd/isuports/main.go から呼ばれるエントリーポイントです
 func Run() {
+	// server number
+	sn := getEnv("SERVER_NUMBER", "5")
+	sni, err := strconv.ParseInt(sn, 10, 32)
+	if err != nil {
+		panic(err)
+	}
+	// 100以上じゃないとダメ
+	a := int32(sni) + 100
+	i = &a
+
+	fmt.Printf("servernum: %v", a)
+
 	go standalone.Integrate(":8888")
 
 	e := echo.New()
@@ -159,7 +154,6 @@ func Run() {
 
 	var (
 		sqlLogger io.Closer
-		err       error
 	)
 	// sqliteのクエリログを出力する設定
 	// 環境変数 ISUCON_SQLITE_TRACE_FILE を設定すると、そのファイルにクエリログをJSON形式で出力する
