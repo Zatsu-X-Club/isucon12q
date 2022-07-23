@@ -862,34 +862,42 @@ func playersAddHandler(c echo.Context) error {
 	displayNames := params["display_name[]"]
 
 	pds := make([]PlayerDetail, 0, len(displayNames))
+
+	players := make([]PlayerRow, 0, len(displayNames))
+	now := time.Now().Unix()
+
+	// dispenseIDで全員分払い出す
 	for _, displayName := range displayNames {
 		id, err := dispenseID(ctx)
 		if err != nil {
 			return fmt.Errorf("error dispenseID: %w", err)
 		}
+		players = append(players, PlayerRow{
+			TenantID:       v.tenantID,
+			ID:             id,
+			DisplayName:    displayName,
+			IsDisqualified: false,
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		})
+	}
 
-		now := time.Now().Unix()
-		// ここもbulk-insertする
-		if _, err := tenantDB.ExecContext(
-			ctx,
-			"INSERT INTO player (id, tenant_id, display_name, is_disqualified, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-			id, v.tenantID, displayName, false, now, now,
-		); err != nil {
-			return fmt.Errorf(
-				"error Insert player at tenantDB: id=%s, displayName=%s, isDisqualified=%t, createdAt=%d, updatedAt=%d, %w",
-				id, displayName, false, now, now, err,
-			)
-		}
-		// insertしたのでcacheの削除
-		playerCache.Set(id, nil)
-		p, err := retrievePlayer(ctx, tenantDB, id)
-		if err != nil {
-			return fmt.Errorf("error retrievePlayer: %w", err)
-		}
+	// bulk insert
+
+	if _, err := tenantDB.NamedExecContext(
+		ctx,
+		"INSERT INTO player (id, tenant_id, display_name, is_disqualified, created_at, updated_at) VALUES (:id, :tenant_id, :display_name, :is_disqualified, :created_at, :updated_at)",
+		players,
+	); err != nil {
+		return fmt.Errorf("error bulk insert player: %w", err)
+	}
+
+	for _, player := range players {
+		playerCache.Set(player.ID, nil)
 		pds = append(pds, PlayerDetail{
-			ID:             p.ID,
-			DisplayName:    p.DisplayName,
-			IsDisqualified: p.IsDisqualified,
+			ID:             player.ID,
+			DisplayName:    player.DisplayName,
+			IsDisqualified: player.IsDisqualified,
 		})
 	}
 
