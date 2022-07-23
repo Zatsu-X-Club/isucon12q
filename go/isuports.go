@@ -380,12 +380,24 @@ type PlayerRow struct {
 	UpdatedAt      int64  `db:"updated_at"`
 }
 
+// retrieveCompetitionのcache
+var playerCache = NewCache()
+
 // 参加者を取得する
 func retrievePlayer(ctx context.Context, tenantDB dbOrTx, id string) (*PlayerRow, error) {
 	var p PlayerRow
+	value := playerCache.Get(id)
+	if value != nil {
+		v, ok := value.(PlayerRow)
+		if !ok {
+			return nil, fmt.Errorf("error tosa_debug cast")
+		}
+		return &v, nil
+	}
 	if err := tenantDB.GetContext(ctx, &p, "SELECT * FROM player WHERE id = ?", id); err != nil {
 		return nil, fmt.Errorf("error Select player: id=%s, %w", id, err)
 	}
+	playerCache.Set(p.ID, p)
 	return &p, nil
 }
 
@@ -836,6 +848,8 @@ func playersAddHandler(c echo.Context) error {
 				id, displayName, false, now, now, err,
 			)
 		}
+		// insertしたのでcacheの削除
+		playerCache.Set(id, nil)
 		p, err := retrievePlayer(ctx, tenantDB, id)
 		if err != nil {
 			return fmt.Errorf("error retrievePlayer: %w", err)
@@ -888,6 +902,8 @@ func playerDisqualifiedHandler(c echo.Context) error {
 			true, now, playerID, err,
 		)
 	}
+	// cacheの削除
+	playerCache.Set(playerID, nil)
 	p, err := retrievePlayer(ctx, tenantDB, playerID)
 	if err != nil {
 		// 存在しないプレイヤー
