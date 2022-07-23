@@ -1,6 +1,6 @@
 services:
   webapp:
-    build: ./go
+    build: ../go
     environment:
       - ISUCON_DB_HOST=127.0.0.1
       - ISUCON_DB_PORT=3306
