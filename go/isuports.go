@@ -672,12 +672,12 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 
 // new function
 func billingReportByCompetitionSub(
-	ctx context.Context, 
-	tenantDB dbOrTx, 
-	tenantID int64, 
-	competiton CompetitionRow, 
-	vhs []VisitHistorySummaryRow2, 
-	scoredPlayerIds: []string) (*BillingReport, error) {
+	ctx context.Context,
+	tenantDB dbOrTx,
+	tenantID int64,
+	competiton CompetitionRow,
+	vhs []VisitHistorySummaryRow2,
+	scoredPlayerIds []string) (*BillingReport, error) {
 	// competitionの値を取得する
 	comp := competiton
 	if !comp.FinishedAt.Valid {
@@ -702,7 +702,6 @@ func billingReportByCompetitionSub(
 		}
 		billingMap[vh.PlayerID] = "visitor"
 	}
-
 
 	// スコアを登録した参加者のIDを取得する
 	scoredPlayerIDs := scoredPlayerIds
