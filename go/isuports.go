@@ -666,12 +666,9 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 }
 
 // 大会ごとの課金レポートを計算する
-func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID int64, competitonID string) (*BillingReport, error) {
+func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID int64, competiton CompetitionRow) (*BillingReport, error) {
 	// competitionの値を取得する
-	comp, err := retrieveCompetition(ctx, tenantDB, competitonID)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieveCompetition: %w", err)
-	}
+	comp := competiton
 
 	// ランキングにアクセスした参加者のIDを取得する
 	vhs := []VisitHistorySummaryRow{}
@@ -836,17 +833,17 @@ func tenantsBillingHandler(c echo.Context) error {
 			}
 
 			// ここがクソ重い
-			// for _, comp := range cs {
-			// 	report, err := billingReportByCompetition(ctx, tenantDB, t.ID, comp.ID)
-			// 	if err != nil {
-			// 		return fmt.Errorf("failed to billingReportByCompetition: %w", err)
-			// 	}
-			// 	tb.BillingYen += report.BillingYen
-			// }
-			reports, err := billingReportByCompetition2(ctx, tenantDB, t.ID, cs)
-			for _, r := range reports {
-				tb.BillingYen += r.BillingYen
+			for _, comp := range cs {
+				report, err := billingReportByCompetition(ctx, tenantDB, t.ID, comp)
+				if err != nil {
+					return fmt.Errorf("failed to billingReportByCompetition: %w", err)
+				}
+				tb.BillingYen += report.BillingYen
 			}
+			// reports, err := billingReportByCompetition2(ctx, tenantDB, t.ID, cs)
+			// for _, r := range reports {
+			// 	tb.BillingYen += r.BillingYen
+			// }
 			tenantBillings = append(tenantBillings, tb)
 			return nil
 		}(t)
