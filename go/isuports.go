@@ -642,12 +642,13 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 	if err := tenantDB.SelectContext(
 		ctx,
 		&scoredPlayerIDs,
-		"SELECT DISTINCT(player_id) as pid, competition_id FROM player_score WHERE tenant_id = ?",
+		"SELECT DISTINCT(player_id) as pid, competition_id FROM player_score WHERE tenant_id = ? GROUP BY competition_id, player_id",
 		tenantID,
 	); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("error Select count player_score: tenantID=%d, %w", tenantID, err)
 	}
 
+	// やりたいのは pid <->
 	for _, comp := range competiton {
 		vh := []VisitHistorySummaryRow2{}
 		for _, v := range vhs {
