@@ -616,7 +616,7 @@ type VisitHistorySummaryRow2 struct {
 }
 
 type scoredPlayerIDs2 struct {
-	PlayerID      string `db:pid`
+	PlayerID      string `db:"pid"`
 	CompetitionID string `db:"competition_id"`
 }
 
