@@ -1669,6 +1669,7 @@ func competitionRankingHandler(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error Select player_score: tenantID=%d, competitionID=%s, %w", tenant.ID, competitionID, err)
 	}
+	defer rows.Close()
 
 	pss := []PlayerScoreRow{}
 	for rows.Next() {
