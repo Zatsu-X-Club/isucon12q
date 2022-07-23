@@ -22,6 +22,7 @@ import (
 	"github.com/gofrs/flock"
 	"github.com/jmoiron/sqlx"
 	"github.com/kaz/pprotein/integration/standalone"
+	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -680,6 +681,7 @@ func tenantsBillingHandler(c echo.Context) error {
 			}
 			defer tenantDB.Close()
 			cs := []CompetitionRow{}
+			// N + N + 1 外でまとめる
 			if err := tenantDB.SelectContext(
 				ctx,
 				&cs,
@@ -801,6 +803,7 @@ func playersAddHandler(c echo.Context) error {
 		}
 
 		now := time.Now().Unix()
+		// ここもbulk-insertする
 		if _, err := tenantDB.ExecContext(
 			ctx,
 			"INSERT INTO player (id, tenant_id, display_name, is_disqualified, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
@@ -1066,6 +1069,7 @@ func competitionScoreHandler(c echo.Context) error {
 			return fmt.Errorf("row must have two columns: %#v", row)
 		}
 		playerID, scoreStr := row[0], row[1]
+		// ここもN+1になっているのでまとめてSELECTする
 		if _, err := retrievePlayer(ctx, tenantDB, playerID); err != nil {
 			// 存在しない参加者が含まれている
 			if errors.Is(err, sql.ErrNoRows) {
@@ -1109,6 +1113,7 @@ func competitionScoreHandler(c echo.Context) error {
 		return fmt.Errorf("error Delete player_score: tenantID=%d, competitionID=%s, %w", v.tenantID, competitionID, err)
 	}
 	for _, ps := range playerScoreRows {
+		// ここもbulk-insertする
 		if _, err := tenantDB.NamedExecContext(
 			ctx,
 			"INSERT INTO player_score (id, tenant_id, player_id, competition_id, score, row_num, created_at, updated_at) VALUES (:id, :tenant_id, :player_id, :competition_id, :score, :row_num, :created_at, :updated_at)",
@@ -1242,6 +1247,7 @@ func playerHandler(c echo.Context) error {
 	pss := make([]PlayerScoreRow, 0, len(cs))
 	for _, c := range cs {
 		ps := PlayerScoreRow{}
+		// ここもまとめてSELECTすべき
 		if err := tenantDB.GetContext(
 			ctx,
 			&ps,
@@ -1386,6 +1392,7 @@ func competitionRankingHandler(c echo.Context) error {
 			continue
 		}
 		scoredPlayerSet[ps.PlayerID] = struct{}{}
+		// ここもN+1になっているので直す
 		p, err := retrievePlayer(ctx, tenantDB, ps.PlayerID)
 		if err != nil {
 			return fmt.Errorf("error retrievePlayer: %w", err)
