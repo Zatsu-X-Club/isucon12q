@@ -1403,13 +1403,16 @@ func billingHandler(c echo.Context) error {
 		return fmt.Errorf("error Select competition: %w", err)
 	}
 	tbrs := make([]BillingReport, 0, len(cs))
-	for _, comp := range cs {
-		report, err := billingReportByCompetition(ctx, tenantDB, v.tenantID, comp)
-		if err != nil {
-			return fmt.Errorf("error billingReportByCompetition: %w", err)
-		}
-		tbrs = append(tbrs, *report)
-	}
+	// for _, comp := range cs {
+	// 	report, err := billingReportByCompetition(ctx, tenantDB, v.tenantID, comp)
+	// 	if err != nil {
+	// 		return fmt.Errorf("error billingReportByCompetition: %w", err)
+	// 	}
+	// 	tbrs = append(tbrs, *report)
+	// }
+
+	reports, err := billingReportByCompetition2(ctx, tenantDB, v.tenantID, cs)
+	tbrs = reports
 
 	res := SuccessResult{
 		Status: true,
