@@ -631,7 +631,12 @@ func billingReportByCompetition2(ctx context.Context, tenantDB dbOrTx, tenantID 
 	); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("error Select visit_history: tenantID=%d, %w", tenantID, err)
 	}
-
+	// player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
+	fl, err := flockByTenantID(tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("error flockByTenantID: %w", err)
+	}
+	defer fl.Close()
 	// スコアを登録した参加者のIDを取得する
 	scoredPlayerIDs := []scoredPlayerIDs2{}
 	if err := tenantDB.SelectContext(
@@ -698,12 +703,6 @@ func billingReportByCompetitionSub(
 		billingMap[vh.PlayerID] = "visitor"
 	}
 
-	// player_scoreを読んでいるときに更新が走ると不整合が起こるのでロックを取得する
-	fl, err := flockByTenantID(tenantID)
-	if err != nil {
-		return nil, fmt.Errorf("error flockByTenantID: %w", err)
-	}
-	defer fl.Close()
 
 	// スコアを登録した参加者のIDを取得する
 	scoredPlayerIDs := scoredPlayerIds
