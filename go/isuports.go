@@ -106,6 +106,7 @@ var pCache = &prepareCache{
 }
 
 func cachedSelectContext(tenantDB *sqlx.DB, ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+	pCache.mx.Lock()
 	stmt, ok := pCache.store[query]
 	pCache.mx.RUnlock()
 	if !ok {
