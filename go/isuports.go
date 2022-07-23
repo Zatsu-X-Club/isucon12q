@@ -419,7 +419,9 @@ var competitionCache = NewCache()
 func retrieveCompetition(ctx context.Context, tenantDB dbOrTx, id string) (*CompetitionRow, error) {
 	var value = competitionCache.Get(id)
 	if value != nil {
+		log.Print("tosa_debug")
 		v, ok := value.(CompetitionRow)
+		log.Print(v, ok)
 		if !ok {
 			return nil, fmt.Errorf("error !!!!!! tosa_debug cast erro")
 		}
