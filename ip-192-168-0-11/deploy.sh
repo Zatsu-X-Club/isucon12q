@@ -8,7 +8,7 @@ sudo nginx -t
 
 cd /home/isucon/webapp/go
 
-docker-compose -f docker-compose-go.yml up
+docker compose -f docker-compose-go.yml up
 
 sudo systemctl restart isuports.go
 sudo systemctl restart nginx
