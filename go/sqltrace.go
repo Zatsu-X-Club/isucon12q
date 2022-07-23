@@ -17,7 +17,7 @@ import (
 var traceLogEncoder *json.Encoder
 
 func initializeSQLLogger() (string, io.Closer, error) {
-	traceFilePath := getEnv("ISUCON_SQLITE_TRACE_FILE", "")
+	traceFilePath := getEnv("ISUCON_SQLITE_TRACE_FILE", "/var/log/sqlite/slow.log")
 	if traceFilePath == "" {
 		return "sqlite3", io.NopCloser(nil), nil
 	}
